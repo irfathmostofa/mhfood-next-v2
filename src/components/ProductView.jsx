@@ -262,39 +262,44 @@ export default function ProductView({ product }) {
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* Gallery */}
+        {/* Gallery - Thumbnails on left for desktop */}
         <div>
-          <div className="aspect-square rounded-2xl overflow-hidden bg-primary/5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={
-                images[activeImage]?.image_url ||
-                "https://placehold.co/600x600?text=No+Image"
-              }
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          {images.length > 1 && (
-            <div className="flex gap-2 mt-3">
-              {images.map((img, i) => (
-                <button
-                  key={img.id}
-                  onClick={() => setActiveImage(i)}
-                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                    i === activeImage ? "border-accent" : "border-transparent"
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={img.image_url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Thumbnails - Left side on desktop, horizontal on mobile */}
+            {images.length > 1 && (
+              <div className="flex lg:flex-col gap-2 order-2 lg:order-1 lg:w-20">
+                {images.map((img, i) => (
+                  <button
+                    key={img.id}
+                    onClick={() => setActiveImage(i)}
+                    className={`w-full aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
+                      i === activeImage ? "border-accent" : "border-transparent"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.image_url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Main Image */}
+            <div className="aspect-square rounded-2xl overflow-hidden bg-primary/5 flex-1 order-1 lg:order-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={
+                  images[activeImage]?.image_url ||
+                  "https://placehold.co/600x600?text=No+Image"
+                }
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
             </div>
-          )}
+          </div>
         </div>
 
         {/* Details */}
@@ -453,20 +458,26 @@ export default function ProductView({ product }) {
           )}
         </div>
       </div>
-
-      {/* Description Section - Full Width */}
+      {/* Full Description Section */}
       {product.description && (
-        <section className="mt-12 max-w-4xl">
-          <h2 className="font-display text-xl text-ink mb-4">Description</h2>
+        <section className="mt-16 pt-8 border-t border-line">
+          <h2 className="font-display text-2xl text-ink mb-6">Description</h2>
           <div className="prose prose-sm max-w-none text-muted leading-relaxed">
-            {product.description}
+            {product.description.split("\n").map(
+              (paragraph, index) =>
+                paragraph.trim() && (
+                  <p key={index} className="mb-4">
+                    {paragraph}
+                  </p>
+                ),
+            )}
           </div>
         </section>
       )}
 
       {/* Reviews */}
-      <section className="mt-12 max-w-4xl">
-        <h2 className="font-display text-xl text-ink mb-6">Reviews</h2>
+      <section className="mt-16 pt-8 border-t border-line">
+        <h2 className="font-display text-2xl text-ink mb-6">Reviews</h2>
         <ReviewsList
           reviews={product.reviews || []}
           avgRating={product.avg_rating}
@@ -475,38 +486,38 @@ export default function ProductView({ product }) {
       </section>
 
       {/* Related Products */}
-      <section className="mt-16">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-xl text-ink">Related Products</h2>
-          <Link
-            href={`/shop?category=${product.category_id}`}
-            className="text-sm text-accent hover:underline"
-          >
-            View All
-          </Link>
-        </div>
-
-        {relatedLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="aspect-3/4 bg-primary/5 rounded-2xl animate-pulse"
-              />
-            ))}
+      {!relatedLoading && relatedProducts.length > 0 && (
+        <section className="mt-16 pt-8 border-t border-line">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-2xl text-ink">Related Products</h2>
+            <Link
+              href={`/shop?category=${product.category_id}`}
+              className="text-sm text-accent hover:underline font-medium"
+            >
+              View All →
+            </Link>
           </div>
-        ) : relatedProducts.length === 0 ? (
-          <p className="text-sm text-muted text-center py-8">
-            No related products found.
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {relatedProducts.map((relatedProduct) => (
               <ProductCard key={relatedProduct.id} product={relatedProduct} />
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
+
+      {relatedLoading && (
+        <section className="mt-16 pt-8 border-t border-line">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="aspect-[3/4] bg-primary/5 rounded-2xl animate-pulse"
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }
